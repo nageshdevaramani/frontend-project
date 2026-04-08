@@ -23,12 +23,11 @@ pipeline {
         stage('Build Image') {
             steps {
                 sh '''
-                docker build -t $APP_NAME:$IMAGE_TAG ./frontend-project
+                docker build -t $APP_NAME:$IMAGE_TAG .
                 '''
             }
         }
 
-        // 🔥 Get previous running version
         stage('Get Previous Version') {
             steps {
                 script {
@@ -41,7 +40,6 @@ pipeline {
             }
         }
 
-        // 🔥 Deploy new version
         stage('Deploy Frontend') {
             steps {
                 sh '''
@@ -53,7 +51,6 @@ pipeline {
             }
         }
 
-        // 🔥 Health check (IMPORTANT)
         stage('Health Check') {
             steps {
                 script {
@@ -61,7 +58,7 @@ pipeline {
 
                     retry(10) {
                         sleep 5
-                        sh 'curl -f http://frontend'
+                        sh 'docker exec nginx curl -f http://frontend'
                     }
 
                     echo "✅ Frontend is UP"
@@ -70,30 +67,28 @@ pipeline {
         }
     }
 
-    // 🔥 Rollback logic
     post {
-    failure {
-        echo '❌ Deployment failed - Rolling back...'
+        failure {
+            echo '❌ Deployment failed - Rolling back...'
 
-        sh '''
-        if [ -f prev_tag.txt ]; then
-            PREV_TAG=$(cat prev_tag.txt)
+            sh '''
+            if [ -f prev_tag.txt ]; then
+                PREV_TAG=$(cat prev_tag.txt)
 
-            if [ ! -z "$PREV_TAG" ]; then
-                echo "Rolling back to version: $PREV_TAG"
+                if [ ! -z "$PREV_TAG" ]; then
+                    echo "Rolling back to version: $PREV_TAG"
 
-                export IMAGE_TAG=$PREV_TAG
-                docker-compose down || true
-                docker-compose up -d
+                    export IMAGE_TAG=$PREV_TAG
+                    docker-compose down || true
+                    docker-compose up -d
+                else
+                    echo "⚠️ No previous version available"
+                fi
             else
-                echo "⚠️ No previous version available"
+                echo "⚠️ prev_tag.txt not found (build failed early)"
             fi
-        else
-            echo "⚠️ prev_tag.txt not found (build failed early)"
-        fi
-        '''
-    }
-}
+            '''
+        }
 
         success {
             echo '✅ Deployment successful'
