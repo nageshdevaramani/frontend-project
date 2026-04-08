@@ -27,7 +27,7 @@ function App() {
 
       {data && (
         <>
-          <p>{data.message}</p>
+          {/* <p>{data.message}</p> */}
           <p>{data.time}</p>
         </>
       )}
