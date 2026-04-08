@@ -61,7 +61,7 @@ pipeline {
                         sh 'docker exec nginx curl -f http://frontend'
                     }
 
-                    echo "✅ Frontend is UP"
+                    echo "Frontend is UP"
                 }
             }
         }
@@ -69,7 +69,7 @@ pipeline {
 
     post {
         failure {
-            echo '❌ Deployment failed - Rolling back...'
+            echo 'Deployment failed - Rolling back...'
 
             sh '''
             if [ -f prev_tag.txt ]; then
@@ -82,20 +82,20 @@ pipeline {
                     docker-compose down || true
                     docker-compose up -d
                 else
-                    echo "⚠️ No previous version available"
+                    echo "No previous version available"
                 fi
             else
-                echo "⚠️ prev_tag.txt not found (build failed early)"
+                echo "prev_tag.txt not found (build failed early)"
             fi
             '''
         }
 
         success {
-            echo '✅ Deployment successful'
+            echo 'Deployment successful'
         }
 
         always {
-            echo '🧹 Cleaning unused images'
+            echo 'Cleaning unused images'
             sh 'docker image prune -f || true'
         }
     }
