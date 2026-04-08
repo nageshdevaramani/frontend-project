@@ -72,25 +72,28 @@ pipeline {
 
     // 🔥 Rollback logic
     post {
-        failure {
-            echo '❌ Deployment failed - Rolling back...'
+    failure {
+        echo '❌ Deployment failed - Rolling back...'
 
-            sh '''
+        sh '''
+        if [ -f prev_tag.txt ]; then
             PREV_TAG=$(cat prev_tag.txt)
 
             if [ ! -z "$PREV_TAG" ]; then
                 echo "Rolling back to version: $PREV_TAG"
 
-                export APP_NAME=$APP_NAME
                 export IMAGE_TAG=$PREV_TAG
-
                 docker-compose down || true
                 docker-compose up -d
             else
-                echo "⚠️ First deployment - No rollback available"
+                echo "⚠️ No previous version available"
             fi
-            '''
-        }
+        else
+            echo "⚠️ prev_tag.txt not found (build failed early)"
+        fi
+        '''
+    }
+}
 
         success {
             echo '✅ Deployment successful'
