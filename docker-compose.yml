@@ -1,0 +1,13 @@
+services:
+  frontend:
+    image: ${APP_NAME}:${IMAGE_TAG}
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - devops-net
+
+networks:
+  devops-net:
+    external: true
